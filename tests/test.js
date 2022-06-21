@@ -72,25 +72,42 @@ describe('wasm w shared memory', () => {
 })
 
 
+import { wrap } from 'https://raw.githubusercontent.com/kodema5/waaf.js/master/mod.js'
+let fw = wrap(`
+    import { proxy } from 'https://raw.githubusercontent.com/kodema5/waaf.js/master/mod.js'
+    import { Wasm } from 'https://raw.githubusercontent.com/kodema5/wasm.js/master/mod.js'
+    let wasm
 
+    proxy({
+        init: async ({memory}) => {
+            wasm = await Wasm (
+                await Deno.readFile('test_shared.wasm'),
+                {memory}
+            )
+        },
 
-// var memory = new WebAssembly.Memory({
-//     initial:10,
-//     maximum:10,
-//     shared:true
-// })
+        malloc: (a) => wasm.malloc(a),
 
-// {(async () => {
+        sum: (p,n) => wasm.sum(p,n),
+    })
+`)
 
-//     let wasm1 = await Wasm('../sum.wasm', {memory})
-//     console.log('sin2', wasm1.sin2(0.2), Math.sin(0.2) * 2)
-//     console.log('deg2rad', wasm1.degToRad(30), 30 * Math.PI / 180.)
-
-//     let a = await Deno.readFile('add.wasm')
-//     console.log(a instanceof Uint8Array)
-
-//     let wasm2 = await Wasm(a)
-//     console.log('add', wasm2.add(1,2), 1 + 2)
-
-
-// })()}
+describe('wasm in worker with shared memory', () => {
+    it('can load', async () => {
+        let memory = new WebAssembly.Memory({
+            initial: 10,
+            maximum: 100,
+            shared: true,
+        })
+        await fw.init({memory})
+        let n = values.length
+        let p = await fw.malloc(n * 4)
+        let i32 = new Uint32Array(
+            memory.buffer,
+            p,
+            n
+        )
+        i32.set(values)
+        assertEquals(await fw.sum(p,n), 45)
+    })
+})
