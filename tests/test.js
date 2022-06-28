@@ -6,10 +6,9 @@ import { Wasm } from '../mod.js'
 
 let values = [0,1,2,3,4,5,6,7,8,9]
 let imports = {
-    ext_add2: function(a){
-        return a + 2
-    }
+    ext_add2: (a) => a + 2,
 }
+
 
 describe('wasm w no imported memory', () => {
 
@@ -85,11 +84,15 @@ let fw = wrap(`
     import { Wasm } from 'https://raw.githubusercontent.com/kodema5/wasm.js/master/mod.js'
     let wasm
 
+    let imports = {
+        ext_add2: (a) => a + 2
+    }
+
     proxy({
-        init: async ({memory}) => {
+        init: async ({ memory }) => {
             wasm = await Wasm (
                 await Deno.readFile('test_shared.wasm'),
-                {memory}
+                { memory, imports }
             )
         },
 
