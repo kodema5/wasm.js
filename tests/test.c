@@ -16,3 +16,9 @@ double sin2 ( double a ) {
 double degToRad(double d) {
     return d * ( PI / 180.0);
 }
+
+extern double ext_add2(double);
+
+double add4(double a) {
+    return ext_add2(a) * 2.0;
+}
