@@ -2,9 +2,10 @@ import { js_math } from './js_math.js'
 import { Heap } from './heap.js'
 
 export let Wasm = async (src, {
-    memory: is_mem,   // imported memory
+    memory: imp_mem,  // imported memory
     is_heap = true,   // add heap malloc/free
     is_math = true,   // add js_math fucntions
+    imports: imp_etc = {},     // additional imports
 } = {}) => {
 
     let buf
@@ -24,7 +25,7 @@ export let Wasm = async (src, {
     let imports = {
         env: {
             // imported memory
-            ...(is_mem && { memory:is_mem }),
+            ...(imp_mem && { memory:imp_mem }),
 
             // simple malloc/free
             ...(is_heap && {
@@ -34,6 +35,9 @@ export let Wasm = async (src, {
 
             // reuse js-math funcs
             ...(is_math && js_math),
+
+            // other imports it
+            ...(imp_etc),
         }
     }
 
@@ -41,11 +45,11 @@ export let Wasm = async (src, {
     wasm = instance.exports
 
     if (is_heap) {
-        heap = new Heap(wasm, is_mem)
+        heap = new Heap(wasm, imp_mem)
     }
 
     return {
-        ...(is_mem && { memory: is_mem }),
+        ...(imp_mem && { memory: imp_mem }),
 
         // for wasm.__heap.reset()
         //
